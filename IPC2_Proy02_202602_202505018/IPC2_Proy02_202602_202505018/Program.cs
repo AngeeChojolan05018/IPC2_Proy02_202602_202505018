@@ -1,3 +1,5 @@
+using IPC2_Proy02_202602_202505018;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Agregar servicios para Razor Pages
@@ -23,5 +25,6 @@ app.UseAuthorization();
 
 // Mapear las páginas Razor
 app.MapRazorPages();
+
 
 app.Run();
