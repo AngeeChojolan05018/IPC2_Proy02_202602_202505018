@@ -39,10 +39,14 @@ namespace IPC2_Proy02_202602_202505018.Servicios
             return true;
         }
 
+        // Cargar categorías
         private void CargarCategorias(
             XmlNode listaCategorias,
             Catalogo catalogo)
         {
+            ListaSimple pendientes =
+                new ListaSimple();
+
             foreach (XmlNode nodoCategoria
                 in listaCategorias.SelectNodes("categoria")!)
             {
@@ -57,27 +61,86 @@ namespace IPC2_Proy02_202602_202505018.Servicios
                     continue;
                 }
 
-                Categoria categoria =
-                    new Categoria(nombre);
+                string padre = "";
 
-                NodoArbol nuevaCategoria =
-                    new NodoArbol(categoria);
-
-                if (catalogo.Categorias.EstaVacio())
+                if (nombrePadre != null)
                 {
-                    catalogo.Categorias.EstablecerRaiz(
-                        nuevaCategoria);
+                    padre = nombrePadre.Trim();
                 }
-                else if (nombrePadre != null &&
-                         nombrePadre.Trim() != "")
+
+                DatosCategoriaXML datos =
+                    new DatosCategoriaXML(
+                        nombre,
+                        padre);
+
+                pendientes.Agregar(datos);
+            }
+
+            bool huboCambios = true;
+
+            while (!pendientes.EstaVacia() &&
+                   huboCambios)
+            {
+                huboCambios = false;
+
+                Nodo? actual =
+                    pendientes.ObtenerPrimero();
+
+                while (actual != null)
                 {
-                    catalogo.Categorias.AgregarCategoria(
-                        nuevaCategoria,
-                        nombrePadre.Trim());
+                    Nodo? siguiente =
+                        actual.Siguiente;
+
+                    DatosCategoriaXML datos =
+                        (DatosCategoriaXML)actual.Dato;
+
+                    bool agregada = false;
+
+                    // Agregar la categoría raíz
+                    if (catalogo.Categorias.EstaVacio())
+                    {
+                        if (datos.Padre == "")
+                        {
+                            Categoria categoria =
+                                new Categoria(
+                                    datos.Nombre);
+
+                            NodoArbol nuevaCategoria =
+                                new NodoArbol(
+                                    categoria);
+
+                            catalogo.Categorias
+                                .EstablecerRaiz(
+                                    nuevaCategoria);
+
+                            agregada = true;
+                        }
+                    }
+                    // Agregar una categoría hija
+                    else if (datos.Padre != "" &&
+                             catalogo.ExisteCategoria(
+                                 datos.Padre))
+                    {
+                        agregada =
+                            catalogo.AgregarCategoria(
+                                datos.Nombre,
+                                datos.Padre);
+                    }
+
+                    if (agregada)
+                    {
+                        pendientes.Eliminar(
+                            datos);
+
+                        huboCambios = true;
+                    }
+
+                    actual = siguiente;
                 }
             }
         }
 
+        // Cargar libros
         private void CargarLibros(
             XmlNode listaLibros,
             Catalogo catalogo)
@@ -106,7 +169,8 @@ namespace IPC2_Proy02_202602_202505018.Servicios
                 }
 
                 int isbn =
-                    int.Parse(nodoISBN.InnerText.Trim());
+                    int.Parse(
+                        nodoISBN.InnerText.Trim());
 
                 string titulo =
                     nodoTitulo.InnerText.Trim();
@@ -124,10 +188,22 @@ namespace IPC2_Proy02_202602_202505018.Servicios
                         autor,
                         categoria);
 
-                NodoISBN nuevo =
-                    new NodoISBN(libro);
+                catalogo.RegistrarLibro(libro);
+            }
+        }
 
-                catalogo.Libros.Insertar(nuevo);
+        private class DatosCategoriaXML
+        {
+            public string Nombre { get; set; }
+
+            public string Padre { get; set; }
+
+            public DatosCategoriaXML(
+                string nombre,
+                string padre)
+            {
+                Nombre = nombre;
+                Padre = padre;
             }
         }
     }

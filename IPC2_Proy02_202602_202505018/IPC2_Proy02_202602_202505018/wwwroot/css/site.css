@@ -1,31 +1,91 @@
-html {
-  font-size: 14px;
+.contenedor-principal {
+    max-width: 1100px;
+    margin: 40px auto;
+    padding: 20px;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+.encabezado {
+    text-align: center;
+    margin-bottom: 30px;
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    .encabezado h1 {
+        font-size: 45px;
+        font-weight: bold;
+    }
+
+    .encabezado p {
+        font-size: 20px;
+    }
+
+.estado {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f5f5f5;
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+.seccion {
+    margin-bottom: 25px;
+    padding: 25px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: white;
 }
 
-body {
-  margin-bottom: 60px;
+    .seccion h2 {
+        margin-bottom: 20px;
+    }
+
+.contenedor-botones {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+.boton {
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+.formulario {
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: #f7f7f7;
+}
+
+    .formulario label {
+        display: block;
+        margin-top: 10px;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    .formulario input {
+        width: 100%;
+        max-width: 500px;
+        padding: 9px;
+        margin-bottom: 10px;
+        border: 1px solid #bbb;
+        border-radius: 5px;
+    }
+
+.archivo {
+    margin-right: 10px;
+}
+
+.resultado {
+    margin-top: 15px;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #eeeeee;
+}
+
+.oculto {
+    display: none;
 }

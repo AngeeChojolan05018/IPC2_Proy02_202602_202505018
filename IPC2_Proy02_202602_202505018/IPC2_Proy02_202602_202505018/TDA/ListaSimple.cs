@@ -54,6 +54,51 @@
             anterior.Siguiente = nuevo;
         }
 
+        public bool Buscar(object dato)
+        {
+            Nodo? actual = primero;
+
+            while (actual != null)
+            {
+                if (Equals(actual.Dato, dato))
+                {
+                    return true;
+                }
+
+                actual = actual.Siguiente;
+            }
+
+            return false;
+        }
+
+        public bool Eliminar(object dato)
+        {
+            Nodo? actual = primero;
+            Nodo? anterior = null;
+
+            while (actual != null)
+            {
+                if (Equals(actual.Dato, dato))
+                {
+                    if (anterior == null)
+                    {
+                        primero = actual.Siguiente;
+                    }
+                    else
+                    {
+                        anterior.Siguiente = actual.Siguiente;
+                    }
+
+                    return true;
+                }
+
+                anterior = actual;
+                actual = actual.Siguiente;
+            }
+
+            return false;
+        }
+
         public bool EstaVacia()
         {
             return primero == null;
@@ -62,6 +107,7 @@
         public int ObtenerCantidad()
         {
             int cantidad = 0;
+
             Nodo? actual = primero;
 
             while (actual != null)

@@ -1,13 +1,15 @@
-using IPC2_Proy02_202602_202505018;
+using IPC2_Proy02_202602_202505018.Servicios;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder =
+    WebApplication.CreateBuilder(args);
 
-// Agregar servicios para Razor Pages
 builder.Services.AddRazorPages();
 
-var app = builder.Build();
+builder.Services.AddSingleton<Catalogo>();
 
-// Configuración del manejo de errores
+var app =
+    builder.Build();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -16,15 +18,12 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Permitir archivos estáticos
 app.UseStaticFiles();
 
 app.UseRouting();
 
 app.UseAuthorization();
 
-// Mapear las páginas Razor
 app.MapRazorPages();
-
 
 app.Run();
