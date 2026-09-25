@@ -1,4 +1,5 @@
-﻿using IPC2_Proy02_202602_202505018.Modelo;
+﻿using System.Text;
+using IPC2_Proy02_202602_202505018.Modelo;
 using IPC2_Proy02_202602_202505018.TDA;
 
 namespace IPC2_Proy02_202602_202505018.Servicios
@@ -15,9 +16,25 @@ namespace IPC2_Proy02_202602_202505018.Servicios
             Libros = new ArbolISBN();
         }
 
-        // Registrar libro
         public bool RegistrarLibro(Libro libro)
         {
+            if (libro == null)
+            {
+                return false;
+            }
+
+            if (libro.ISBN <= 0)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(libro.Titulo) ||
+                string.IsNullOrWhiteSpace(libro.Autor) ||
+                string.IsNullOrWhiteSpace(libro.Categoria))
+            {
+                return false;
+            }
+
             if (Libros.Buscar(libro.ISBN) != null)
             {
                 return false;
@@ -42,7 +59,6 @@ namespace IPC2_Proy02_202602_202505018.Servicios
             return true;
         }
 
-        // Buscar libro por ISBN
         public Libro? BuscarLibro(int isbn)
         {
             NodoISBN? encontrado =
@@ -56,7 +72,6 @@ namespace IPC2_Proy02_202602_202505018.Servicios
             return encontrado.Dato;
         }
 
-        // Eliminar libro
         public bool EliminarLibro(int isbn)
         {
             NodoISBN? encontrado =
@@ -84,84 +99,32 @@ namespace IPC2_Proy02_202602_202505018.Servicios
             return true;
         }
 
-        // Buscar libro dentro de una categoría
-        public Libro? BuscarLibroEnCategoria(
-            string nombreCategoria,
-            int isbn)
-        {
-            NodoArbol? categoria =
-                Categorias.BuscarCategoria(
-                    nombreCategoria);
-
-            if (categoria == null)
-            {
-                return null;
-            }
-
-            Nodo? actual =
-                categoria.Libros.ObtenerPrimero();
-
-            while (actual != null)
-            {
-                Libro libro =
-                    (Libro)actual.Dato;
-
-                if (libro.ISBN == isbn)
-                {
-                    return libro;
-                }
-
-                actual = actual.Siguiente;
-            }
-
-            return null;
-        }
-
-        // Obtener libro con menor ISBN
         public Libro? ObtenerLibroMenor()
         {
-            NodoISBN? encontrado =
+            NodoISBN? minimo =
                 Libros.ObtenerMinimo();
 
-            if (encontrado == null)
+            if (minimo == null)
             {
                 return null;
             }
 
-            return encontrado.Dato;
+            return minimo.Dato;
         }
 
-        // Obtener libro con mayor ISBN
         public Libro? ObtenerLibroMayor()
         {
-            NodoISBN? encontrado =
+            NodoISBN? maximo =
                 Libros.ObtenerMaximo();
 
-            if (encontrado == null)
+            if (maximo == null)
             {
                 return null;
             }
 
-            return encontrado.Dato;
+            return maximo.Dato;
         }
 
-        // Obtener categoría de un libro
-        public NodoArbol? ObtenerCategoriaDeLibro(
-            int isbn)
-        {
-            NodoISBN? encontrado =
-                Libros.Buscar(isbn);
-
-            if (encontrado == null)
-            {
-                return null;
-            }
-
-            return Categorias.BuscarCategoria(
-                encontrado.Dato.Categoria);
-        }
-
-        // Obtener cantidad de libros
         public int ObtenerCantidadLibros()
         {
             return ContarLibros(
@@ -176,24 +139,23 @@ namespace IPC2_Proy02_202602_202505018.Servicios
                 return 0;
             }
 
-            int izquierda =
-                ContarLibros(
-                    actual.Izquierdo);
-
-            int derecha =
-                ContarLibros(
-                    actual.Derecho);
-
-            return 1 + izquierda + derecha;
+            return 1
+                + ContarLibros(actual.Izquierdo)
+                + ContarLibros(actual.Derecho);
         }
 
-        // Obtener libros directos de una categoría
         public ListaSimple? ObtenerLibrosDeCategoria(
             string nombreCategoria)
         {
+            if (string.IsNullOrWhiteSpace(
+                    nombreCategoria))
+            {
+                return null;
+            }
+
             NodoArbol? categoria =
                 Categorias.BuscarCategoria(
-                    nombreCategoria);
+                    nombreCategoria.Trim());
 
             if (categoria == null)
             {
@@ -203,21 +165,25 @@ namespace IPC2_Proy02_202602_202505018.Servicios
             return categoria.Libros;
         }
 
-        // Verificar si existe una categoría
         public bool ExisteCategoria(
             string nombreCategoria)
         {
+            if (string.IsNullOrWhiteSpace(
+                    nombreCategoria))
+            {
+                return false;
+            }
+
             return Categorias.BuscarCategoria(
-                nombreCategoria) != null;
+                nombreCategoria.Trim()) != null;
         }
 
-        // Agregar categoría
         public bool AgregarCategoria(
             string nombreCategoria,
             string nombrePadre)
         {
-            if (nombreCategoria == null ||
-                nombreCategoria.Trim() == "")
+            if (string.IsNullOrWhiteSpace(
+                    nombreCategoria))
             {
                 return false;
             }
@@ -226,7 +192,7 @@ namespace IPC2_Proy02_202602_202505018.Servicios
                 nombreCategoria.Trim();
 
             nombrePadre =
-                nombrePadre.Trim();
+                nombrePadre?.Trim() ?? "";
 
             if (ExisteCategoria(nombreCategoria))
             {
@@ -262,10 +228,140 @@ namespace IPC2_Proy02_202602_202505018.Servicios
                 nombrePadre);
         }
 
-        // Obtener raíz de categorías
         public NodoArbol? ObtenerRaizCategorias()
         {
             return Categorias.ObtenerRaiz();
+        }
+
+        public NodoArbol? BuscarCategoria(
+            string nombre)
+        {
+            return Categorias.BuscarCategoria(
+                nombre);
+        }
+
+        public string ObtenerLibrosAscendenteTexto()
+        {
+            StringBuilder resultado =
+                new StringBuilder();
+
+            if (Libros.EstaVacio())
+            {
+                resultado.Append(
+                    "No hay libros registrados.");
+
+                return resultado.ToString();
+            }
+
+            resultado.AppendLine(
+                "LIBROS ORDENADOS POR ISBN");
+
+            resultado.AppendLine(
+                "==========================");
+
+            AgregarLibrosAscendenteTexto(
+                Libros.ObtenerRaiz(),
+                resultado);
+
+            return resultado.ToString();
+        }
+
+        private void AgregarLibrosAscendenteTexto(
+            NodoISBN? actual,
+            StringBuilder resultado)
+        {
+            if (actual == null)
+            {
+                return;
+            }
+
+            AgregarLibrosAscendenteTexto(
+                actual.Izquierdo,
+                resultado);
+
+            resultado.AppendLine(
+                "ISBN: " +
+                actual.Dato.ISBN +
+                " | Título: " +
+                actual.Dato.Titulo +
+                " | Autor: " +
+                actual.Dato.Autor +
+                " | Categoría: " +
+                actual.Dato.Categoria);
+
+            AgregarLibrosAscendenteTexto(
+                actual.Derecho,
+                resultado);
+        }
+
+        public string ObtenerLibrosCategoriaTexto(
+            string nombreCategoria)
+        {
+            NodoArbol? categoria =
+                BuscarCategoria(nombreCategoria);
+
+            if (categoria == null)
+            {
+                return "No se encontró la categoría.";
+            }
+
+            StringBuilder resultado =
+                new StringBuilder();
+
+            resultado.AppendLine(
+                "CATEGORÍA: " +
+                categoria.Dato.Nombre);
+
+            resultado.AppendLine(
+                "==========================");
+
+            if (categoria.Libros.EstaVacia())
+            {
+                resultado.Append(
+                    "No hay libros asociados.");
+
+                return resultado.ToString();
+            }
+
+            AgregarLibrosCategoriaTexto(
+                categoria.Libros.ObtenerPrimero(),
+                resultado);
+
+            return resultado.ToString();
+        }
+
+        private void AgregarLibrosCategoriaTexto(
+            Nodo? actual,
+            StringBuilder resultado)
+        {
+            if (actual == null)
+            {
+                return;
+            }
+
+            Libro libro =
+                (Libro)actual.Dato;
+
+            resultado.AppendLine(
+                "ISBN: " +
+                libro.ISBN +
+                " | Título: " +
+                libro.Titulo +
+                " | Autor: " +
+                libro.Autor);
+
+            AgregarLibrosCategoriaTexto(
+                actual.Siguiente,
+                resultado);
+        }
+
+        public void Reiniciar()
+        {
+            Categorias =
+                new ArbolCategorias();
+
+            Libros =
+                new ArbolISBN();
         }
     }
 }

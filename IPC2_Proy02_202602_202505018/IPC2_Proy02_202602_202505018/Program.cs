@@ -6,6 +6,7 @@ var builder =
 builder.Services.AddRazorPages();
 
 builder.Services.AddSingleton<Catalogo>();
+builder.Services.AddSingleton<GraphvizService>();
 
 var app =
     builder.Build();

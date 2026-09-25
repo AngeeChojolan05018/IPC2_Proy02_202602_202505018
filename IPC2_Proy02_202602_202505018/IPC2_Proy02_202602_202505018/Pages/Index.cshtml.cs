@@ -11,6 +11,16 @@ namespace IPC2_Proy02_202602_202505018.Pages
     {
         private readonly Catalogo catalogo;
         private readonly LectorXML lectorXML;
+        private readonly GraphvizService graphvizService;
+
+        public IndexModel(
+            Catalogo catalogo,
+            GraphvizService graphvizService)
+        {
+            this.catalogo = catalogo;
+            this.lectorXML = new LectorXML();
+            this.graphvizService = graphvizService;
+        }
 
         public NodoArbol? RaizCategorias =>
             catalogo.ObtenerRaizCategorias();
@@ -18,7 +28,11 @@ namespace IPC2_Proy02_202602_202505018.Pages
         public int CantidadLibros =>
             catalogo.ObtenerCantidadLibros();
 
-        public Libro? LibroEncontrado { get; private set; }
+        public Libro? LibroEncontrado
+        {
+            get;
+            private set;
+        }
 
         public Libro? LibroMenor =>
             catalogo.ObtenerLibroMenor();
@@ -26,54 +40,141 @@ namespace IPC2_Proy02_202602_202505018.Pages
         public Libro? LibroMayor =>
             catalogo.ObtenerLibroMayor();
 
-        public string Mensaje { get; private set; } = "";
-
-        public string TipoMensaje { get; private set; } = "";
-
-        [BindProperty]
-        public string NombreCategoria { get; set; } = "";
-
-        [BindProperty]
-        public string CategoriaPadre { get; set; } = "";
-
-        [BindProperty]
-        public int ISBN { get; set; }
-
-        [BindProperty]
-        public string Titulo { get; set; } = "";
-
-        [BindProperty]
-        public string Autor { get; set; } = "";
-
-        [BindProperty]
-        public string CategoriaLibro { get; set; } = "";
-
-        [BindProperty]
-        public int ISBNBuscar { get; set; }
-
-        [BindProperty]
-        public int ISBNEliminar { get; set; }
-
-        [BindProperty]
-        public IFormFile? ArchivoXML { get; set; }
-
-        public IndexModel(Catalogo catalogo)
+        public string Mensaje
         {
-            this.catalogo = catalogo;
-            lectorXML = new LectorXML();
+            get;
+            private set;
+        } = "";
+
+        public string TipoMensaje
+        {
+            get;
+            private set;
+        } = "";
+
+        public string RutaGraficoCategorias
+        {
+            get;
+            private set;
+        } = "";
+
+        public string RutaGraficoLibros
+        {
+            get;
+            private set;
+        } = "";
+
+        public string RutaGraficoEstructura
+        {
+            get;
+            private set;
+        } = "";
+
+        [BindProperty]
+        public string CategoriaGrafico
+        {
+            get;
+            set;
+        } = "";
+
+        [BindProperty]
+        public string CategoriaInicioGrafico
+        {
+            get;
+            set;
+        } = "";
+
+        [BindProperty]
+        public string NombreCategoria
+        {
+            get;
+            set;
+        } = "";
+
+        [BindProperty]
+        public string CategoriaPadre
+        {
+            get;
+            set;
+        } = "";
+
+        [BindProperty]
+        public int ISBN
+        {
+            get;
+            set;
+        }
+
+        [BindProperty]
+        public string Titulo
+        {
+            get;
+            set;
+        } = "";
+
+        [BindProperty]
+        public string Autor
+        {
+            get;
+            set;
+        } = "";
+
+        [BindProperty]
+        public string CategoriaLibro
+        {
+            get;
+            set;
+        } = "";
+
+        [BindProperty]
+        public int ISBNBuscar
+        {
+            get;
+            set;
+        }
+
+        [BindProperty]
+        public int ISBNEliminar
+        {
+            get;
+            set;
+        }
+
+        [BindProperty]
+        public IFormFile? ArchivoXML
+        {
+            get;
+            set;
         }
 
         public void OnGet()
         {
         }
 
-        // Agregar categoría
+        public IActionResult OnPostReiniciar()
+        {
+            catalogo.Reiniciar();
+
+            LibroEncontrado = null;
+
+            LimpiarGraficos();
+
+            EstablecerMensaje(
+                "El sistema fue reiniciado correctamente.",
+                "exito");
+
+            return Page();
+        }
+
         public IActionResult OnPostAgregarCategoria()
         {
-            string nombre = NombreCategoria?.Trim() ?? "";
-            string padre = CategoriaPadre?.Trim() ?? "";
+            string nombre =
+                NombreCategoria?.Trim() ?? "";
 
-            if (nombre == "")
+            string padre =
+                CategoriaPadre?.Trim() ?? "";
+
+            if (string.IsNullOrWhiteSpace(nombre))
             {
                 EstablecerMensaje(
                     "Debe escribir el nombre de la categoría.",
@@ -96,27 +197,41 @@ namespace IPC2_Proy02_202602_202505018.Pages
             else
             {
                 EstablecerMensaje(
-                    "No se pudo agregar la categoría. Verifique el padre o si ya existe.",
+                    "No se pudo agregar la categoría. " +
+                    "Verifique que el nombre no exista " +
+                    "y que la categoría padre exista.",
                     "error");
             }
 
             return Page();
         }
 
-        // Registrar libro
         public IActionResult OnPostRegistrarLibro()
         {
-            string titulo = Titulo.Trim();
-            string autor = Autor.Trim();
-            string categoria = CategoriaLibro.Trim();
+            string titulo =
+                Titulo?.Trim() ?? "";
 
-            if (ISBN <= 0 ||
-                titulo == "" ||
-                autor == "" ||
-                categoria == "")
+            string autor =
+                Autor?.Trim() ?? "";
+
+            string categoria =
+                CategoriaLibro?.Trim() ?? "";
+
+            if (ISBN <= 0)
             {
                 EstablecerMensaje(
-                    "Complete todos los datos del libro y coloque un ISBN válido.",
+                    "El ISBN debe ser mayor que cero.",
+                    "error");
+
+                return Page();
+            }
+
+            if (string.IsNullOrWhiteSpace(titulo) ||
+                string.IsNullOrWhiteSpace(autor) ||
+                string.IsNullOrWhiteSpace(categoria))
+            {
+                EstablecerMensaje(
+                    "Debe completar todos los datos del libro.",
                     "error");
 
                 return Page();
@@ -141,20 +256,21 @@ namespace IPC2_Proy02_202602_202505018.Pages
             else
             {
                 EstablecerMensaje(
-                    "No se pudo registrar el libro. Revise que la categoría exista y que el ISBN no esté repetido.",
+                    "No se pudo registrar el libro. " +
+                    "Verifique que la categoría exista " +
+                    "y que el ISBN no esté repetido.",
                     "error");
             }
 
             return Page();
         }
 
-        // Buscar libro
         public IActionResult OnPostBuscarLibro()
         {
             if (ISBNBuscar <= 0)
             {
                 EstablecerMensaje(
-                    "Escriba un ISBN válido para buscar.",
+                    "Escriba un ISBN válido.",
                     "error");
 
                 return Page();
@@ -173,20 +289,19 @@ namespace IPC2_Proy02_202602_202505018.Pages
             else
             {
                 EstablecerMensaje(
-                    "Libro encontrado.",
+                    "Libro encontrado correctamente.",
                     "exito");
             }
 
             return Page();
         }
 
-        // Eliminar libro
         public IActionResult OnPostEliminarLibro()
         {
             if (ISBNEliminar <= 0)
             {
                 EstablecerMensaje(
-                    "Escriba un ISBN válido para eliminar.",
+                    "Escriba un ISBN válido.",
                     "error");
 
                 return Page();
@@ -212,81 +327,82 @@ namespace IPC2_Proy02_202602_202505018.Pages
             return Page();
         }
 
-        // Cargar XML
         public async Task<IActionResult> OnPostCargarXMLAsync()
         {
-            if (ArchivoXML == null ||
-                ArchivoXML.Length == 0)
+            if (ArchivoXML == null || ArchivoXML.Length == 0)
             {
-                EstablecerMensaje(
-                    "Seleccione un archivo XML.",
-                    "error");
-
+                EstablecerMensaje("Seleccione un archivo XML.", "error");
                 return Page();
             }
 
-            string extension =
-                Path.GetExtension(
-                    ArchivoXML.FileName);
-
-            if (!extension.Equals(
-                    ".xml",
-                    StringComparison.OrdinalIgnoreCase))
-            {
-                EstablecerMensaje(
-                    "El archivo seleccionado debe tener extensión .xml.",
-                    "error");
-
-                return Page();
-            }
-
-            string rutaTemporal =
-                Path.Combine(
-                    Path.GetTempPath(),
-                    Guid.NewGuid().ToString() + ".xml");
+            string carpetaTemporal = Path.GetTempPath();
+            string rutaTemporal = Path.Combine(
+                carpetaTemporal,
+                Guid.NewGuid().ToString() + ".xml"
+            );
 
             try
             {
-                using (FileStream archivo =
-                    new FileStream(
-                        rutaTemporal,
-                        FileMode.Create,
-                        FileAccess.Write))
+                // Primero guardamos completamente el archivo y cerramos el stream.
+                using (FileStream stream = new FileStream(
+                    rutaTemporal,
+                    FileMode.Create,
+                    FileAccess.Write,
+                    FileShare.None))
                 {
-                    await ArchivoXML.CopyToAsync(
-                        archivo);
+                    await ArchivoXML.CopyToAsync(stream);
                 }
 
-                lectorXML.CargarArchivo(
-                    rutaTemporal,
-                    catalogo);
+                // El archivo ya está cerrado, por lo que ahora sí podemos leerlo.
+                LectorXML lectorXML = new LectorXML();
 
-                EstablecerMensaje(
-                    "Archivo XML cargado correctamente.",
-                    "exito");
+                catalogo.Reiniciar();
+
+                bool cargado = lectorXML.CargarArchivo(rutaTemporal, catalogo);
+
+                if (cargado)
+                {
+                    EstablecerMensaje(
+                        "XML cargado correctamente. Se registraron "
+                        + catalogo.ObtenerCantidadLibros()
+                        + " libros.",
+                        "exito"
+                    );
+                }
+                else
+                {
+                    EstablecerMensaje(
+                        "No fue posible cargar el XML.",
+                        "error"
+                    );
+                }
             }
             catch (Exception ex)
             {
                 EstablecerMensaje(
-                    "Error al cargar el XML: " +
-                    ex.Message,
-                    "error");
+                    "Error al cargar el XML: " + ex.Message,
+                    "error"
+                );
             }
             finally
             {
-                if (System.IO.File.Exists(
-                        rutaTemporal))
+                // Eliminamos el archivo temporal después de terminar la lectura.
+                if (System.IO.File.Exists(rutaTemporal))
                 {
-                    System.IO.File.Delete(
-                        rutaTemporal);
+                    try
+                    {
+                        System.IO.File.Delete(rutaTemporal);
+                    }
+                    catch
+                    {
+                        // Si Windows todavía lo tiene ocupado, no detenemos la aplicación.
+                    }
                 }
             }
 
             return Page();
         }
 
-        // Obtener categorías para mostrarlas
-        // utilizando los nodos de ListaSimple.
         public string ObtenerArbolCategoriasTexto()
         {
             NodoArbol? raiz =
@@ -308,9 +424,7 @@ namespace IPC2_Proy02_202602_202505018.Pages
         {
             string texto = "";
 
-            for (int i = 0;
-                 i < nivel;
-                 i++)
+            for (int i = 0; i < nivel; i++)
             {
                 texto += "    ";
             }
@@ -318,7 +432,7 @@ namespace IPC2_Proy02_202602_202505018.Pages
             texto +=
                 "- " +
                 categoria.Dato.Nombre +
-                "\n";
+                Environment.NewLine;
 
             Nodo? actual =
                 categoria.Hijos.ObtenerPrimero();
@@ -338,6 +452,215 @@ namespace IPC2_Proy02_202602_202505018.Pages
             }
 
             return texto;
+        }
+
+        public string ObtenerLibrosAscendenteTexto()
+        {
+            return catalogo
+                .ObtenerLibrosAscendenteTexto();
+        }
+
+        public string ObtenerLibrosCategoriaTexto()
+        {
+            if (string.IsNullOrWhiteSpace(
+                    CategoriaGrafico))
+            {
+                return
+                    "Escriba una categoría para consultar sus libros.";
+            }
+
+            return catalogo
+                .ObtenerLibrosCategoriaTexto(
+                    CategoriaGrafico.Trim());
+        }
+
+        public IActionResult
+            OnPostGenerarGraficoCategorias()
+        {
+            NodoArbol? raiz =
+                catalogo.ObtenerRaizCategorias();
+
+            if (raiz == null)
+            {
+                EstablecerMensaje(
+                    "No hay categorías para generar el gráfico.",
+                    "error");
+
+                return Page();
+            }
+
+            try
+            {
+                string carpetaSalida =
+                    ObtenerCarpetaReportes();
+
+                graphvizService
+                    .GenerarImagenCategorias(
+                        raiz,
+                        carpetaSalida);
+
+                RutaGraficoCategorias =
+                    "/reportes/categorias.png?v=" +
+                    DateTime.Now.Ticks;
+
+                EstablecerMensaje(
+                    "Árbol completo de categorías generado.",
+                    "exito");
+            }
+            catch (Exception ex)
+            {
+                EstablecerMensaje(
+                    "Error al generar el gráfico: " +
+                    ex.Message,
+                    "error");
+            }
+
+            return Page();
+        }
+
+        public IActionResult
+            OnPostGenerarGraficoEstructura()
+        {
+            string nombre =
+                CategoriaInicioGrafico?.Trim() ?? "";
+
+            NodoArbol? inicio;
+
+            if (string.IsNullOrWhiteSpace(nombre))
+            {
+                inicio =
+                    catalogo.ObtenerRaizCategorias();
+            }
+            else
+            {
+                inicio =
+                    catalogo.BuscarCategoria(nombre);
+            }
+
+            if (inicio == null)
+            {
+                EstablecerMensaje(
+                    "No se encontró la categoría desde la cual iniciar el gráfico.",
+                    "error");
+
+                return Page();
+            }
+
+            try
+            {
+                string carpetaSalida =
+                    ObtenerCarpetaReportes();
+
+                graphvizService
+                    .GenerarImagenCategorias(
+                        inicio,
+                        carpetaSalida);
+
+                RutaGraficoEstructura =
+                    "/reportes/categorias.png?v=" +
+                    DateTime.Now.Ticks;
+
+                if (string.IsNullOrWhiteSpace(nombre))
+                {
+                    EstablecerMensaje(
+                        "Gráfico generado desde la raíz.",
+                        "exito");
+                }
+                else
+                {
+                    EstablecerMensaje(
+                        "Gráfico generado desde la categoría seleccionada.",
+                        "exito");
+                }
+            }
+            catch (Exception ex)
+            {
+                EstablecerMensaje(
+                    "Error al generar el gráfico: " +
+                    ex.Message,
+                    "error");
+            }
+
+            return Page();
+        }
+
+        public IActionResult
+            OnPostGenerarGraficoLibros()
+        {
+            string nombreCategoria =
+                CategoriaGrafico?.Trim() ?? "";
+
+            if (string.IsNullOrWhiteSpace(
+                    nombreCategoria))
+            {
+                EstablecerMensaje(
+                    "Escriba el nombre de una categoría.",
+                    "error");
+
+                return Page();
+            }
+
+            NodoArbol? categoria =
+                catalogo.BuscarCategoria(
+                    nombreCategoria);
+
+            if (categoria == null)
+            {
+                EstablecerMensaje(
+                    "No se encontró la categoría indicada.",
+                    "error");
+
+                return Page();
+            }
+
+            try
+            {
+                string carpetaSalida =
+                    ObtenerCarpetaReportes();
+
+                graphvizService
+                    .GenerarImagenLibrosCategoria(
+                        categoria,
+                        carpetaSalida);
+
+                RutaGraficoLibros =
+                    "/reportes/libros_categoria.png?v=" +
+                    DateTime.Now.Ticks;
+
+                EstablecerMensaje(
+                    "Gráfico generado para la categoría seleccionada.",
+                    "exito");
+            }
+            catch (Exception ex)
+            {
+                EstablecerMensaje(
+                    "Error al generar el gráfico: " +
+                    ex.Message,
+                    "error");
+            }
+
+            return Page();
+        }
+
+        private string ObtenerCarpetaReportes()
+        {
+            string carpeta =
+                Path.Combine(
+                    Environment.CurrentDirectory,
+                    "wwwroot",
+                    "reportes");
+
+            Directory.CreateDirectory(
+                carpeta);
+
+            return carpeta;
+        }
+
+        private void LimpiarGraficos()
+        {
+            RutaGraficoCategorias = "";
+            RutaGraficoEstructura = "";
+            RutaGraficoLibros = "";
         }
 
         private void EstablecerMensaje(

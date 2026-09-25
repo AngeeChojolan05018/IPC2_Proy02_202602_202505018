@@ -2,314 +2,640 @@
 @model IPC2_Proy02_202602_202505018.Pages.IndexModel
 
 @{
-    ViewData["Title"] = "Biblioteca";
+    ViewData["Title"] = "Sistema de Biblioteca";
 }
 
 <div class="container py-4">
 
-    <h1 class="mb-2">Sistema de Biblioteca</h1>
+    <div class="mb-4">
+        <h1 class="display-5">
+            Sistema de Biblioteca
+        </h1>
 
-    <p class="text-muted">
-        Gestión de categorías y libros.
-    </p>
+        <p class="text-muted">
+            Administración de categorías, subcategorías y libros.
+        </p>
+    </div>
 
     @if (!string.IsNullOrWhiteSpace(Model.Mensaje))
     {
-        if (Model.TipoMensaje == "exito")
-        {
-            <div class="alert alert-success">
-                @Model.Mensaje
-            </div>
-        }
-        else
-        {
-            <div class="alert alert-danger">
-                @Model.Mensaje
-            </div>
-        }
+        <div class="alert @(Model.TipoMensaje == "exito"
+                        ? "alert-success"
+                        : "alert-danger")">
+            @Model.Mensaje
+        </div>
     }
 
-    <div class="row g-4">
+    <!-- RESUMEN -->
 
-        <!-- CARGAR XML -->
-        <div class="col-md-6">
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
 
-            <div class="card p-4 h-100">
+            <h2 class="h4">Resumen del catálogo</h2>
 
-                <h2>Cargar XML</h2>
+            <div class="row mt-3">
 
-                <form method="post"
-                      enctype="multipart/form-data"
-                      asp-page-handler="CargarXML">
+                <div class="col-md-4">
+                    <div class="border rounded p-3">
+                        <strong>Libros registrados</strong>
+
+                        <div class="fs-3">
+                            @Model.CantidadLibros
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="border rounded p-3">
+                        <strong>ISBN menor</strong>
+
+                        @if (Model.LibroMenor != null)
+                        {
+                            <div>@Model.LibroMenor.ISBN</div>
+
+                            <small class="text-muted">
+                                @Model.LibroMenor.Titulo
+                            </small>
+                        }
+                        else
+                        {
+                            <div>No hay libros.</div>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="border rounded p-3">
+                        <strong>ISBN mayor</strong>
+
+                        @if (Model.LibroMayor != null)
+                        {
+                            <div>@Model.LibroMayor.ISBN</div>
+
+                            <small class="text-muted">
+                                @Model.LibroMayor.Titulo
+                            </small>
+                        }
+                        else
+                        {
+                            <div>No hay libros.</div>
+                        }
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- REINICIAR -->
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <h2 class="h4">Inicialización</h2>
+
+            <p class="text-muted">
+                Limpia el catálogo actual y permite iniciar nuevamente
+                sin información previa.
+            </p>
+
+            <form method="post"
+                  asp-page-handler="Reiniciar">
+
+                <button type="submit"
+                        class="btn btn-warning"
+                        onclick="return confirm('¿Está seguro de reiniciar el catálogo?');">
+
+                    Reiniciar sistema
+
+                </button>
+
+            </form>
+
+        </div>
+    </div>
+
+    <!-- XML -->
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <h2 class="h4">Cargar archivo XML</h2>
+
+            <p class="text-muted">
+                Permite cargar información inicial o incremental.
+            </p>
+
+            <form method="post"
+                  enctype="multipart/form-data"
+                  asp-page-handler="CargarXML">
+
+                <div class="mb-3">
+
+                    <label asp-for="ArchivoXML"
+                           class="form-label">
+
+                        Archivo XML
+
+                    </label>
 
                     <input asp-for="ArchivoXML"
                            type="file"
                            accept=".xml"
-                           class="form-control mb-3" />
+                           class="form-control" />
 
-                    <button type="submit"
-                            class="btn btn-primary">
-                        Cargar XML
-                    </button>
+                </div>
 
-                </form>
+                <button type="submit"
+                        class="btn btn-primary">
 
-            </div>
+                    Cargar XML
 
-        </div>
+                </button>
 
-
-        <!-- RESUMEN -->
-        <div class="col-md-6">
-
-            <div class="card p-4 h-100">
-
-                <h2>Resumen</h2>
-
-                <p>
-                    <strong>Libros registrados:</strong>
-                    @Model.CantidadLibros
-                </p>
-
-                @if (Model.LibroMenor != null)
-                {
-                    <p>
-                        <strong>ISBN menor:</strong>
-                        @Model.LibroMenor.ISBN
-                        -
-                        @Model.LibroMenor.Titulo
-                    </p>
-                }
-                else
-                {
-                    <p>
-                        <strong>ISBN menor:</strong>
-                        No hay libros.
-                    </p>
-                }
-
-                @if (Model.LibroMayor != null)
-                {
-                    <p>
-                        <strong>ISBN mayor:</strong>
-                        @Model.LibroMayor.ISBN
-                        -
-                        @Model.LibroMayor.Titulo
-                    </p>
-                }
-                else
-                {
-                    <p>
-                        <strong>ISBN mayor:</strong>
-                        No hay libros.
-                    </p>
-                }
-
-            </div>
+            </form>
 
         </div>
+    </div>
 
+    <div class="row g-4">
 
-        <!-- AGREGAR CATEGORIA -->
-        <div class="col-md-6">
+        <!-- CATEGORIA -->
 
-            <div class="card p-4 h-100">
+        <div class="col-lg-6">
 
-                <h2>Agregar categoría</h2>
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
 
-                <form method="post"
-                      asp-page-handler="AgregarCategoria">
-
-                    <label asp-for="NombreCategoria">
-                        Nombre
-                    </label>
-
-                    <input asp-for="NombreCategoria"
-                           class="form-control mb-3" />
-
-
-                    <label asp-for="CategoriaPadre">
-                        Categoría padre
-                    </label>
-
-                    <input asp-for="CategoriaPadre"
-                           class="form-control mb-3"
-                           placeholder="Vacío si es la raíz" />
-
-
-                    <button type="submit"
-                            class="btn btn-primary">
-
+                    <h2 class="h4">
                         Agregar categoría
+                    </h2>
 
-                    </button>
+                    <form method="post"
+                          asp-page-handler="AgregarCategoria">
 
-                </form>
+                        <div class="mb-3">
 
+                            <label asp-for="NombreCategoria"
+                                   class="form-label">
+
+                                Nombre
+
+                            </label>
+
+                            <input asp-for="NombreCategoria"
+                                   class="form-control"
+                                   placeholder="Ejemplo: Programación" />
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label asp-for="CategoriaPadre"
+                                   class="form-label">
+
+                                Categoría padre
+
+                            </label>
+
+                            <input asp-for="CategoriaPadre"
+                                   class="form-control"
+                                   placeholder="Vacío únicamente para la raíz" />
+
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-success">
+
+                            Agregar categoría
+
+                        </button>
+
+                    </form>
+
+                </div>
             </div>
 
         </div>
 
+        <!-- LIBRO -->
 
-        <!-- REGISTRAR LIBRO -->
-        <div class="col-md-6">
+        <div class="col-lg-6">
 
-            <div class="card p-4 h-100">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
 
-                <h2>Registrar libro</h2>
-
-                <form method="post"
-                      asp-page-handler="RegistrarLibro">
-
-                    <label asp-for="ISBN">
-                        ISBN
-                    </label>
-
-                    <input asp-for="ISBN"
-                           type="number"
-                           class="form-control mb-3" />
-
-
-                    <label asp-for="Titulo">
-                        Título
-                    </label>
-
-                    <input asp-for="Titulo"
-                           class="form-control mb-3" />
-
-
-                    <label asp-for="Autor">
-                        Autor
-                    </label>
-
-                    <input asp-for="Autor"
-                           class="form-control mb-3" />
-
-
-                    <label asp-for="CategoriaLibro">
-                        Categoría
-                    </label>
-
-                    <input asp-for="CategoriaLibro"
-                           class="form-control mb-3" />
-
-
-                    <button type="submit"
-                            class="btn btn-primary">
-
+                    <h2 class="h4">
                         Registrar libro
+                    </h2>
 
-                    </button>
+                    <form method="post"
+                          asp-page-handler="RegistrarLibro">
 
-                </form>
+                        <div class="mb-3">
 
+                            <label asp-for="ISBN"
+                                   class="form-label">
+
+                                ISBN
+
+                            </label>
+
+                            <input asp-for="ISBN"
+                                   type="number"
+                                   min="1"
+                                   class="form-control" />
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label asp-for="Titulo"
+                                   class="form-label">
+
+                                Título
+
+                            </label>
+
+                            <input asp-for="Titulo"
+                                   class="form-control" />
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label asp-for="Autor"
+                                   class="form-label">
+
+                                Autor
+
+                            </label>
+
+                            <input asp-for="Autor"
+                                   class="form-control" />
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label asp-for="CategoriaLibro"
+                                   class="form-label">
+
+                                Categoría
+
+                            </label>
+
+                            <input asp-for="CategoriaLibro"
+                                   class="form-control" />
+
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-success">
+
+                            Registrar libro
+
+                        </button>
+
+                    </form>
+
+                </div>
             </div>
 
         </div>
 
+        <!-- BUSCAR -->
 
-        <!-- BUSCAR LIBRO -->
-        <div class="col-md-6">
+        <div class="col-lg-6">
 
-            <div class="card p-4 h-100">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
 
-                <h2>Buscar libro</h2>
+                    <h2 class="h4">
+                        Buscar libro por ISBN
+                    </h2>
 
-                <form method="post"
-                      asp-page-handler="BuscarLibro">
+                    <form method="post"
+                          asp-page-handler="BuscarLibro">
 
-                    <label asp-for="ISBNBuscar">
-                        ISBN
-                    </label>
+                        <div class="mb-3">
 
-                    <input asp-for="ISBNBuscar"
-                           type="number"
-                           class="form-control mb-3" />
+                            <label asp-for="ISBNBuscar"
+                                   class="form-label">
 
-                    <button type="submit"
-                            class="btn btn-primary">
+                                ISBN
 
-                        Buscar libro
+                            </label>
 
-                    </button>
+                            <input asp-for="ISBNBuscar"
+                                   type="number"
+                                   min="1"
+                                   class="form-control" />
 
-                </form>
+                        </div>
 
+                        <button type="submit"
+                                class="btn btn-primary">
 
-                @if (Model.LibroEncontrado != null)
-                {
-                    <hr />
+                            Buscar libro
 
-                    <h3>Resultado</h3>
+                        </button>
 
-                    <p>
-                        <strong>ISBN:</strong>
-                        @Model.LibroEncontrado.ISBN
-                    </p>
+                    </form>
 
-                    <p>
-                        <strong>Título:</strong>
-                        @Model.LibroEncontrado.Titulo
-                    </p>
+                    @if (Model.LibroEncontrado != null)
+                    {
+                        <div class="alert alert-success mt-4">
 
-                    <p>
-                        <strong>Autor:</strong>
-                        @Model.LibroEncontrado.Autor
-                    </p>
+                            <h3 class="h5">
+                                Libro encontrado
+                            </h3>
 
-                    <p>
-                        <strong>Categoría:</strong>
-                        @Model.LibroEncontrado.Categoria
-                    </p>
-                }
+                            <p>
+                                <strong>ISBN:</strong>
+                                @Model.LibroEncontrado.ISBN
+                            </p>
 
+                            <p>
+                                <strong>Título:</strong>
+                                @Model.LibroEncontrado.Titulo
+                            </p>
+
+                            <p>
+                                <strong>Autor:</strong>
+                                @Model.LibroEncontrado.Autor
+                            </p>
+
+                            <p class="mb-0">
+                                <strong>Categoría:</strong>
+                                @Model.LibroEncontrado.Categoria
+                            </p>
+
+                        </div>
+                    }
+
+                </div>
             </div>
 
         </div>
 
+        <!-- ELIMINAR -->
 
-        <!-- ELIMINAR LIBRO -->
-        <div class="col-md-6">
+        <div class="col-lg-6">
 
-            <div class="card p-4 h-100">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
 
-                <h2>Eliminar libro</h2>
-
-                <form method="post"
-                      asp-page-handler="EliminarLibro">
-
-                    <label asp-for="ISBNEliminar">
-                        ISBN
-                    </label>
-
-                    <input asp-for="ISBNEliminar"
-                           type="number"
-                           class="form-control mb-3" />
-
-                    <button type="submit"
-                            class="btn btn-danger">
-
+                    <h2 class="h4">
                         Eliminar libro
+                    </h2>
 
-                    </button>
+                    <p class="text-muted">
+                        Elimina el libro del catálogo.
+                    </p>
 
-                </form>
+                    <form method="post"
+                          asp-page-handler="EliminarLibro">
 
+                        <div class="mb-3">
+
+                            <label asp-for="ISBNEliminar"
+                                   class="form-label">
+
+                                ISBN
+
+                            </label>
+
+                            <input asp-for="ISBNEliminar"
+                                   type="number"
+                                   min="1"
+                                   class="form-control" />
+
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-danger">
+
+                            Eliminar libro
+
+                        </button>
+
+                    </form>
+
+                </div>
             </div>
 
         </div>
 
+    </div>
 
-        <!-- CATEGORIAS -->
-        <div class="col-12">
+    <!-- CATEGORIAS -->
 
-            <div class="card p-4">
+    <div class="card shadow-sm mt-4">
 
-                <h2>Categorías cargadas</h2>
+        <div class="card-body">
 
-                <pre class="bg-light p-3">@Model.ObtenerArbolCategoriasTexto()</pre>
+            <h2 class="h4">
+                Estructura de categorías y subcategorías
+            </h2>
 
-            </div>
+            <pre class="bg-light border rounded p-3">@Model.ObtenerArbolCategoriasTexto()</pre>
+
+        </div>
+
+    </div>
+
+    <!-- LIBROS ASCENDENTES -->
+
+    <div class="card shadow-sm mt-4">
+
+        <div class="card-body">
+
+            <h2 class="h4">
+                Libros ordenados por ISBN
+            </h2>
+
+            <pre class="bg-light border rounded p-3">@Model.ObtenerLibrosAscendenteTexto()</pre>
+
+        </div>
+
+    </div>
+
+    <!-- LIBROS DE CATEGORIA -->
+
+    <div class="card shadow-sm mt-4">
+
+        <div class="card-body">
+
+            <h2 class="h4">
+                Libros de una categoría
+            </h2>
+
+            <form method="post"
+                  asp-page-handler="GenerarGraficoLibros">
+
+                <div class="mb-3">
+
+                    <label asp-for="CategoriaGrafico"
+                           class="form-label">
+
+                        Categoría
+
+                    </label>
+
+                    <input asp-for="CategoriaGrafico"
+                           class="form-control"
+                           placeholder="Ejemplo: Programación" />
+
+                </div>
+
+                <button type="submit"
+                        class="btn btn-primary">
+
+                    Consultar y generar Graphviz
+
+                </button>
+
+            </form>
+
+            <pre class="bg-light border rounded p-3 mt-3">@Model.ObtenerLibrosCategoriaTexto()</pre>
+
+            @if (!string.IsNullOrWhiteSpace(Model.RutaGraficoLibros))
+            {
+                <img src="@Model.RutaGraficoLibros"
+                     alt="Libros de la categoría"
+                     class="img-fluid border rounded p-2" />
+            }
+
+        </div>
+
+    </div>
+
+    <!-- GRAPHVIZ -->
+
+    <div class="card shadow-sm mt-4">
+
+        <div class="card-body">
+
+            <h2 class="h4">
+                Graphviz
+            </h2>
+
+            <p class="text-muted">
+                Visualización gráfica de la estructura del catálogo.
+            </p>
+
+            <form method="post"
+                  asp-page-handler="GenerarGraficoCategorias">
+
+                <button type="submit"
+                        class="btn btn-primary">
+
+                    Generar árbol completo
+
+                </button>
+
+            </form>
+
+            @if (!string.IsNullOrWhiteSpace(Model.RutaGraficoCategorias))
+            {
+                <div class="mt-4">
+
+                    <h3 class="h5">
+                        Árbol completo
+                    </h3>
+
+                    <img src="@Model.RutaGraficoCategorias"
+                         alt="Árbol completo de categorías"
+                         class="img-fluid border rounded p-2" />
+
+                </div>
+            }
+
+            <hr class="my-4" />
+
+            <h3 class="h5">
+                Iniciar desde una subcategoría
+            </h3>
+
+            <form method="post"
+                  asp-page-handler="GenerarGraficoEstructura">
+
+                <div class="mb-3">
+
+                    <label asp-for="CategoriaInicioGrafico"
+                           class="form-label">
+
+                        Categoría inicial
+
+                    </label>
+
+                    <input asp-for="CategoriaInicioGrafico"
+                           class="form-control"
+                           placeholder="Vacío = raíz" />
+
+                </div>
+
+                <button type="submit"
+                        class="btn btn-secondary">
+
+                    Generar desde categoría
+
+                </button>
+
+            </form>
+
+            @if (!string.IsNullOrWhiteSpace(Model.RutaGraficoEstructura))
+            {
+                <div class="mt-4">
+
+                    <h3 class="h5">
+                        Estructura seleccionada
+                    </h3>
+
+                    <img src="@Model.RutaGraficoEstructura"
+                         alt="Estructura de categorías"
+                         class="img-fluid border rounded p-2" />
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+    <!-- AYUDA -->
+
+    <div class="card shadow-sm mt-4 mb-5">
+
+        <div class="card-body">
+
+            <h2 class="h4">
+                Ayuda
+            </h2>
+
+            <p>
+                Sistema para administrar libros organizados
+                mediante categorías y subcategorías.
+            </p>
+
+            <ul>
+                <li>Cargar XML.</li>
+                <li>Agregar categorías.</li>
+                <li>Registrar libros.</li>
+                <li>Buscar por ISBN.</li>
+                <li>Eliminar libros.</li>
+                <li>Consultar ISBN menor y mayor.</li>
+                <li>Mostrar libros ordenados por ISBN.</li>
+                <li>Consultar libros por categoría.</li>
+                <li>Generar reportes Graphviz.</li>
+                <li>Generar la estructura desde una subcategoría.</li>
+            </ul>
+
+            <p class="mb-0">
+                La documentación del proyecto debe mantenerse
+                dentro del repositorio.
+            </p>
 
         </div>
 

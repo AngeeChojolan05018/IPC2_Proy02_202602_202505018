@@ -54,6 +54,48 @@
             anterior.Siguiente = nuevo;
         }
 
+        public void AgregarOrdenadoISBN(object dato)
+        {
+            Modelo.Libro nuevoLibro =
+                (Modelo.Libro)dato;
+
+            Nodo nuevo = new Nodo(dato);
+
+            if (primero == null)
+            {
+                primero = nuevo;
+                return;
+            }
+
+            Modelo.Libro primerLibro =
+                (Modelo.Libro)primero.Dato;
+
+            if (nuevoLibro.ISBN < primerLibro.ISBN)
+            {
+                nuevo.Siguiente = primero;
+                primero = nuevo;
+                return;
+            }
+
+            Nodo actual = primero;
+
+            while (actual.Siguiente != null)
+            {
+                Modelo.Libro siguienteLibro =
+                    (Modelo.Libro)actual.Siguiente.Dato;
+
+                if (nuevoLibro.ISBN < siguienteLibro.ISBN)
+                {
+                    break;
+                }
+
+                actual = actual.Siguiente;
+            }
+
+            nuevo.Siguiente = actual.Siguiente;
+            actual.Siguiente = nuevo;
+        }
+
         public bool Buscar(object dato)
         {
             Nodo? actual = primero;
@@ -86,7 +128,40 @@
                     }
                     else
                     {
-                        anterior.Siguiente = actual.Siguiente;
+                        anterior.Siguiente =
+                            actual.Siguiente;
+                    }
+
+                    return true;
+                }
+
+                anterior = actual;
+                actual = actual.Siguiente;
+            }
+
+            return false;
+        }
+
+        public bool EliminarPorISBN(int isbn)
+        {
+            Nodo? actual = primero;
+            Nodo? anterior = null;
+
+            while (actual != null)
+            {
+                Modelo.Libro libro =
+                    (Modelo.Libro)actual.Dato;
+
+                if (libro.ISBN == isbn)
+                {
+                    if (anterior == null)
+                    {
+                        primero = actual.Siguiente;
+                    }
+                    else
+                    {
+                        anterior.Siguiente =
+                            actual.Siguiente;
                     }
 
                     return true;
@@ -113,6 +188,7 @@
             while (actual != null)
             {
                 cantidad++;
+
                 actual = actual.Siguiente;
             }
 

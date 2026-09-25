@@ -1,0 +1,15 @@
+digraph Categorias {
+rankdir=TB;
+node [shape=box];
+categoria_9801873 [label="Catalogo"];
+categoria_9801873 -> categoria_33142016;
+categoria_33142016 [label="Arquitectura"];
+categoria_33142016 -> categoria_53546360;
+categoria_53546360 [label="Romance"];
+categoria_9801873 -> categoria_6747440;
+categoria_6747440 [label="Ecologia"];
+categoria_6747440 -> categoria_35930465;
+categoria_35930465 [label="Estadistica"];
+categoria_35930465 -> categoria_53778899;
+categoria_53778899 [label="Programacion"];
+}

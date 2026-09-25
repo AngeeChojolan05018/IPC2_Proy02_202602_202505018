@@ -14,9 +14,11 @@
             return raiz;
         }
 
-        public void EstablecerRaiz(NodoArbol nuevaRaiz)
+        public void EstablecerRaiz(
+            NodoArbol nuevaRaiz)
         {
             raiz = nuevaRaiz;
+            raiz.Padre = null;
         }
 
         public bool EstaVacio()
@@ -28,14 +30,33 @@
             NodoArbol nuevaCategoria,
             string nombrePadre)
         {
+            if (nuevaCategoria == null)
+            {
+                return false;
+            }
+
             if (raiz == null)
             {
+                if (!string.IsNullOrWhiteSpace(
+                        nombrePadre))
+                {
+                    return false;
+                }
+
                 raiz = nuevaCategoria;
+                raiz.Padre = null;
+
                 return true;
             }
 
             if (BuscarCategoria(
-                nuevaCategoria.Dato.Nombre) != null)
+                    nuevaCategoria.Dato.Nombre) != null)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    nombrePadre))
             {
                 return false;
             }
@@ -48,8 +69,7 @@
                 return false;
             }
 
-            AgregarHijoOrdenado(
-                padre,
+            padre.AgregarHijoOrdenado(
                 nuevaCategoria);
 
             return true;
@@ -58,21 +78,25 @@
         public NodoArbol? BuscarCategoria(
             string nombre)
         {
-            if (raiz == null)
+            if (raiz == null ||
+                string.IsNullOrWhiteSpace(nombre))
             {
                 return null;
             }
 
             return BuscarCategoriaRecursivo(
                 raiz,
-                nombre);
+                nombre.Trim());
         }
 
         private NodoArbol? BuscarCategoriaRecursivo(
             NodoArbol actual,
             string nombre)
         {
-            if (actual.Dato.Nombre == nombre)
+            if (string.Equals(
+                    actual.Dato.Nombre,
+                    nombre,
+                    StringComparison.OrdinalIgnoreCase))
             {
                 return actual;
             }
@@ -99,49 +123,6 @@
             }
 
             return null;
-        }
-
-        private void AgregarHijoOrdenado(
-            NodoArbol padre,
-            NodoArbol nuevo)
-        {
-            nuevo.Padre = padre;
-
-            Nodo? anterior = null;
-
-            Nodo? actual =
-                padre.Hijos.ObtenerPrimero();
-
-            while (actual != null)
-            {
-                NodoArbol hijoActual =
-                    (NodoArbol)actual.Dato;
-
-                int comparacion =
-                    string.Compare(
-                        nuevo.Dato.Nombre,
-                        hijoActual.Dato.Nombre,
-                        StringComparison.OrdinalIgnoreCase);
-
-                if (comparacion < 0)
-                {
-                    break;
-                }
-
-                anterior = actual;
-                actual = actual.Siguiente;
-            }
-
-            if (anterior == null)
-            {
-                padre.Hijos.AgregarAlInicio(nuevo);
-            }
-            else
-            {
-                padre.Hijos.AgregarAntesDe(
-                    anterior,
-                    nuevo);
-            }
         }
     }
 }

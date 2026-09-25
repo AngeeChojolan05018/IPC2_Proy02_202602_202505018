@@ -6,80 +6,67 @@ namespace IPC2_Proy02_202602_202505018.Servicios
 {
     public class LectorXML
     {
-        public bool CargarArchivo(
-            string ruta,
-            Catalogo catalogo)
+        public bool CargarArchivo(string ruta, Catalogo catalogo)
         {
-            XmlDocument documento = new XmlDocument();
-
-            documento.Load(ruta);
-
-            XmlNode? listaCategorias =
-                documento.SelectSingleNode(
-                    "/config/listaCategorias");
-
-            if (listaCategorias != null)
+            try
             {
-                CargarCategorias(
-                    listaCategorias,
-                    catalogo);
+                XmlDocument documento = new XmlDocument();
+                documento.Load(ruta);
+
+                XmlNode? listaCategorias =
+                    documento.SelectSingleNode("/config/listaCategorias");
+
+                if (listaCategorias != null)
+                {
+                    CargarCategorias(listaCategorias, catalogo);
+                }
+
+                XmlNode? listaLibros =
+                    documento.SelectSingleNode("/config/listaLibros");
+
+                if (listaLibros != null)
+                {
+                    CargarLibros(listaLibros, catalogo);
+                }
+
+                return true;
             }
-
-            XmlNode? listaLibros =
-                documento.SelectSingleNode(
-                    "/config/listaLibros");
-
-            if (listaLibros != null)
+            catch
             {
-                CargarLibros(
-                    listaLibros,
-                    catalogo);
+                return false;
             }
-
-            return true;
         }
 
-        // Cargar categorías
         private void CargarCategorias(
             XmlNode listaCategorias,
             Catalogo catalogo)
         {
-            ListaSimple pendientes =
-                new ListaSimple();
+            ListaSimple pendientes = new ListaSimple();
 
-            foreach (XmlNode nodoCategoria
-                in listaCategorias.SelectNodes("categoria")!)
+            foreach (XmlNode nodoCategoria in
+                     listaCategorias.SelectNodes("categoria")!)
             {
                 string nombre =
                     nodoCategoria.InnerText.Trim();
 
-                string? nombrePadre =
-                    nodoCategoria.Attributes?["padre"]?.Value;
+                string padre =
+                    nodoCategoria.Attributes?["padre"]?.Value?.Trim()
+                    ?? "";
 
-                if (nombre == "")
+                if (string.IsNullOrWhiteSpace(nombre))
                 {
                     continue;
                 }
 
-                string padre = "";
-
-                if (nombrePadre != null)
-                {
-                    padre = nombrePadre.Trim();
-                }
-
                 DatosCategoriaXML datos =
-                    new DatosCategoriaXML(
-                        nombre,
-                        padre);
+                    new DatosCategoriaXML(nombre, padre);
 
                 pendientes.Agregar(datos);
             }
 
             bool huboCambios = true;
 
-            while (!pendientes.EstaVacia() &&
-                   huboCambios)
+            while (!pendientes.EstaVacia() && huboCambios)
             {
                 huboCambios = false;
 
@@ -96,57 +83,55 @@ namespace IPC2_Proy02_202602_202505018.Servicios
 
                     bool agregada = false;
 
-                    // Agregar la categoría raíz
                     if (catalogo.Categorias.EstaVacio())
                     {
-                        if (datos.Padre == "")
+                        if (string.IsNullOrWhiteSpace(datos.Padre))
                         {
                             Categoria categoria =
-                                new Categoria(
-                                    datos.Nombre);
+                                new Categoria(datos.Nombre);
 
                             NodoArbol nuevaCategoria =
-                                new NodoArbol(
-                                    categoria);
+                                new NodoArbol(categoria);
 
                             catalogo.Categorias
-                                .EstablecerRaiz(
-                                    nuevaCategoria);
+                                .EstablecerRaiz(nuevaCategoria);
 
                             agregada = true;
                         }
                     }
-                    // Agregar una categoría hija
-                    else if (datos.Padre != "" &&
-                             catalogo.ExisteCategoria(
-                                 datos.Padre))
+                    else
                     {
-                        agregada =
-                            catalogo.AgregarCategoria(
-                                datos.Nombre,
-                                datos.Padre);
+
+                        if (!string.IsNullOrWhiteSpace(datos.Padre))
+                        {
+                            if (catalogo.ExisteCategoria(datos.Padre))
+                            {
+                                agregada =
+                                    catalogo.AgregarCategoria(
+                                        datos.Nombre,
+                                        datos.Padre);
+                            }
+                        }
                     }
 
                     if (agregada)
                     {
-                        pendientes.Eliminar(
-                            datos);
-
+                        pendientes.Eliminar(datos);
                         huboCambios = true;
                     }
 
                     actual = siguiente;
                 }
             }
+
         }
 
-        // Cargar libros
         private void CargarLibros(
             XmlNode listaLibros,
             Catalogo catalogo)
         {
-            foreach (XmlNode nodoLibro
-                in listaLibros.SelectNodes("libro")!)
+            foreach (XmlNode nodoLibro in
+                     listaLibros.SelectNodes("libro")!)
             {
                 XmlNode? nodoISBN =
                     nodoLibro.SelectSingleNode("ISBN");
@@ -168,9 +153,20 @@ namespace IPC2_Proy02_202602_202505018.Servicios
                     continue;
                 }
 
-                int isbn =
-                    int.Parse(
-                        nodoISBN.InnerText.Trim());
+                string textoISBN =
+                    nodoISBN.InnerText.Trim();
+
+                if (!int.TryParse(
+                        textoISBN,
+                        out int isbn))
+                {
+                    continue;
+                }
+
+                if (isbn <= 0)
+                {
+                    continue;
+                }
 
                 string titulo =
                     nodoTitulo.InnerText.Trim();
@@ -180,6 +176,13 @@ namespace IPC2_Proy02_202602_202505018.Servicios
 
                 string categoria =
                     nodoCategoria.InnerText.Trim();
+
+                if (string.IsNullOrWhiteSpace(titulo) ||
+                    string.IsNullOrWhiteSpace(autor) ||
+                    string.IsNullOrWhiteSpace(categoria))
+                {
+                    continue;
+                }
 
                 Libro libro =
                     new Libro(
@@ -195,7 +198,6 @@ namespace IPC2_Proy02_202602_202505018.Servicios
         private class DatosCategoriaXML
         {
             public string Nombre { get; set; }
-
             public string Padre { get; set; }
 
             public DatosCategoriaXML(

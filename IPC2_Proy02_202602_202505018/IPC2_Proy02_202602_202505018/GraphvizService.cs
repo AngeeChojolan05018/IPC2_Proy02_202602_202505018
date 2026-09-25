@@ -1,12 +1,12 @@
-﻿using IPC2_Proy02_202602_202505018.Modelo;
-using IPC2_Proy02_202602_202505018.TDA;
+﻿using System.Diagnostics;
 using System.Text;
+using IPC2_Proy02_202602_202505018.Modelo;
+using IPC2_Proy02_202602_202505018.TDA;
 
 namespace IPC2_Proy02_202602_202505018.Servicios
 {
     public class GraphvizService
     {
-        // Generar árbol de categorías
         public string GenerarCategorias(
             NodoArbol? raiz)
         {
@@ -15,6 +15,9 @@ namespace IPC2_Proy02_202602_202505018.Servicios
 
             contenido.AppendLine(
                 "digraph Categorias {");
+
+            contenido.AppendLine(
+                "rankdir=TB;");
 
             contenido.AppendLine(
                 "node [shape=box];");
@@ -66,11 +69,11 @@ namespace IPC2_Proy02_202602_202505018.Servicios
                     nodoHijo,
                     contenido);
 
-                hijo = hijo.Siguiente;
+                hijo =
+                    hijo.Siguiente;
             }
         }
 
-        // Generar libros de una categoría
         public string GenerarLibrosCategoria(
             NodoArbol? categoria)
         {
@@ -81,46 +84,59 @@ namespace IPC2_Proy02_202602_202505018.Servicios
                 "digraph Libros {");
 
             contenido.AppendLine(
+                "rankdir=TB;");
+
+            contenido.AppendLine(
                 "node [shape=box];");
 
-            if (categoria != null)
+            if (categoria == null)
             {
+                contenido.AppendLine("}");
+
+                return contenido.ToString();
+            }
+
+            contenido.AppendLine(
+                "categoria [label=\"" +
+                EscaparTexto(
+                    categoria.Dato.Nombre) +
+                "\"];");
+
+            Nodo? actual =
+                categoria.Libros.ObtenerPrimero();
+
+            int posicion = 0;
+
+            while (actual != null)
+            {
+                Libro libro =
+                    (Libro)actual.Dato;
+
+                string idLibro =
+                    "libro" + posicion;
+
                 contenido.AppendLine(
-                    "categoria [label=\"" +
+                    idLibro +
+                    " [label=\"" +
+                    "ISBN: " +
+                    libro.ISBN +
+                    "\\nTítulo: " +
                     EscaparTexto(
-                        categoria.Dato.Nombre) +
+                        libro.Titulo) +
+                    "\\nAutor: " +
+                    EscaparTexto(
+                        libro.Autor) +
                     "\"];");
 
-                NodoISBN?[] libros =
-                    ObtenerLibrosOrdenados(
-                        categoria);
+                contenido.AppendLine(
+                    "categoria -> " +
+                    idLibro +
+                    ";");
 
-                for (int i = 0;
-                     i < libros.Length;
-                     i++)
-                {
-                    if (libros[i] == null)
-                    {
-                        continue;
-                    }
+                posicion++;
 
-                    string idLibro =
-                        "libro" + i;
-
-                    contenido.AppendLine(
-                        idLibro +
-                        " [label=\"" +
-                        EscaparTexto(
-                            libros[i]!.Dato.ISBN +
-                            " - " +
-                            libros[i]!.Dato.Titulo) +
-                        "\"];");
-
-                    contenido.AppendLine(
-                        "categoria -> " +
-                        idLibro +
-                        ";");
-                }
+                actual =
+                    actual.Siguiente;
             }
 
             contenido.AppendLine("}");
@@ -128,73 +144,104 @@ namespace IPC2_Proy02_202602_202505018.Servicios
             return contenido.ToString();
         }
 
-        private NodoISBN?[] ObtenerLibrosOrdenados(
-            NodoArbol categoria)
+        public string GenerarImagenCategorias(
+            NodoArbol raiz,
+            string carpetaSalida)
         {
-            int cantidad =
-                categoria.Libros.ObtenerCantidad();
-
-            NodoISBN?[] resultado =
-                new NodoISBN?[cantidad];
-
-            int posicion = 0;
-
-            Nodo? actual =
-                categoria.Libros.ObtenerPrimero();
-
-            while (actual != null)
-            {
-                Libro libro =
-                    (Libro)actual.Dato;
-
-                resultado[posicion] =
-                    new NodoISBN(libro);
-
-                posicion++;
-
-                actual = actual.Siguiente;
-            }
-
-            OrdenarLibros(resultado);
-
-            return resultado;
+            return GenerarImagen(
+                GenerarCategorias(raiz),
+                carpetaSalida,
+                "categorias");
         }
 
-        // Ordenar libros por ISBN
-        private void OrdenarLibros(
-            NodoISBN?[] libros)
+        public string GenerarImagenLibrosCategoria(
+            NodoArbol categoria,
+            string carpetaSalida)
         {
-            for (int i = 0;
-                 i < libros.Length - 1;
-                 i++)
-            {
-                for (int j = 0;
-                     j < libros.Length - 1 - i;
-                     j++)
-                {
-                    if (libros[j] == null ||
-                        libros[j + 1] == null)
-                    {
-                        continue;
-                    }
-
-                    if (libros[j]!.Dato.ISBN >
-                        libros[j + 1]!.Dato.ISBN)
-                    {
-                        NodoISBN? temporal =
-                            libros[j];
-
-                        libros[j] =
-                            libros[j + 1];
-
-                        libros[j + 1] =
-                            temporal;
-                    }
-                }
-            }
+            return GenerarImagen(
+                GenerarLibrosCategoria(categoria),
+                carpetaSalida,
+                "libros_categoria");
         }
 
-        // Obtener identificador de categoría
+        private string GenerarImagen(
+            string contenidoDot,
+            string carpetaSalida,
+            string nombreBase)
+        {
+            Directory.CreateDirectory(
+                carpetaSalida);
+
+            string rutaDot =
+                Path.Combine(
+                    carpetaSalida,
+                    nombreBase + ".dot");
+
+            string rutaPng =
+                Path.Combine(
+                    carpetaSalida,
+                    nombreBase + ".png");
+
+            File.WriteAllText(
+     rutaDot,
+     contenidoDot,
+     new UTF8Encoding(false)
+ );
+
+            ProcessStartInfo proceso =
+                new ProcessStartInfo();
+
+            proceso.FileName = "dot";
+
+            proceso.Arguments =
+                "-Tpng \"" +
+                rutaDot +
+                "\" -o \"" +
+                rutaPng +
+                "\"";
+
+            proceso.UseShellExecute = false;
+
+            proceso.CreateNoWindow = true;
+
+            proceso.RedirectStandardOutput = true;
+
+            proceso.RedirectStandardError = true;
+
+            using Process? ejecutado =
+                Process.Start(proceso);
+
+            if (ejecutado == null)
+            {
+                throw new Exception(
+                    "No se pudo iniciar Graphviz. " +
+                    "Verifique que Graphviz esté instalado " +
+                    "y que el comando dot esté disponible.");
+            }
+
+            string error =
+                ejecutado
+                    .StandardError
+                    .ReadToEnd();
+
+            ejecutado.WaitForExit();
+
+            if (ejecutado.ExitCode != 0)
+            {
+                throw new Exception(
+                    "Graphviz produjo un error: " +
+                    error);
+            }
+
+            if (!File.Exists(rutaPng))
+            {
+                throw new Exception(
+                    "Graphviz no generó la imagen PNG.");
+            }
+
+            return rutaPng;
+        }
+
         private string ObtenerId(
             NodoArbol nodo)
         {
@@ -202,7 +249,6 @@ namespace IPC2_Proy02_202602_202505018.Servicios
                    nodo.GetHashCode();
         }
 
-        // Escapar texto para Graphviz
         private string EscaparTexto(
             string texto)
         {
